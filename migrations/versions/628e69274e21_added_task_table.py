@@ -1,10 +1,11 @@
-"""added table task
+"""added task table
 
-Revision ID: ae400ddb147d
+Revision ID: 628e69274e21
 Revises: 
-Create Date: 2024-12-22 23:16:41.893113
+Create Date: 2024-12-25 22:17:41.848455
 
 """
+
 from typing import Sequence, Union
 
 from alembic import op
@@ -12,7 +13,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = "ae400ddb147d"
+revision: str = "628e69274e21"
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -24,7 +25,7 @@ def upgrade() -> None:
         "task",
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("status", sa.String(), nullable=False),
-        sa.Column("result", sa.Integer(), nullable=True),
+        sa.Column("result", sa.Integer(), nullable=False),
         sa.PrimaryKeyConstraint("id"),
     )
     # ### end Alembic commands ###

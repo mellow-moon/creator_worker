@@ -10,4 +10,4 @@ class Task(Base):
 
     id = Column(Integer, primary_key=True)
     status = Column(String, nullable=False)
-    result = Column(Integer, nullable=True, default=None)
+    result = Column(Integer, nullable=False, default=0)

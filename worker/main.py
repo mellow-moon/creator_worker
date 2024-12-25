@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from db_models import Task
 from const import TaskStatus, Queue
-from services import get_db_session, fib
+from services import get_db_session, fib_async
 
 load_dotenv()
 
@@ -36,7 +36,7 @@ async def start_task(
     )
     await session.commit()
 
-    result: int = await fib(35)
+    result: int = await fib_async(40)
 
     await session.execute(
         update(Task)
@@ -56,9 +56,11 @@ async def get_task_state(
 
 @broker.subscriber(Queue.ALL_TASK)
 async def get_state(
-    session: AsyncSession = Depends(get_db_session)
+    session: AsyncSession = Depends(get_db_session),
 ) -> list[dict[str, Union[int, str]]]:
-    tasks: Sequence[Task] = (await session.scalars(select(Task))).all()
+    tasks: Sequence[Task] = (
+        await session.scalars(select(Task).order_by(Task.id))
+    ).all()
     return [
         {"id": task.id, "status": task.status, "result": task.result} for task in tasks
     ]

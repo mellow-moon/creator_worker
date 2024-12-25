@@ -1,5 +1,6 @@
 import os
 
+import asyncio
 from dotenv import load_dotenv
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
@@ -16,8 +17,12 @@ async def get_db_session() -> AsyncSession:
         yield session
 
 
-async def fib(n: int) -> int:
+def fib(n: int) -> int:
     if n <= 1:
         return n
     else:
-        return await fib(n - 1) + await fib(n - 2)
+        return fib(n - 1) + fib(n - 2)
+
+
+async def fib_async(n: int) -> int:
+    return await asyncio.to_thread(fib, n)

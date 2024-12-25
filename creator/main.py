@@ -32,7 +32,9 @@ async def start_task(task_id: int) -> MessageSchema:
 
 @router.get("/get_task_state", response_model=TaskState)
 async def get_task_state(task_id: int) -> TaskState:
-    res: RabbitMessage = await router.broker.request(message=task_id, queue=Queue.ONE_TASK)
+    res: RabbitMessage = await router.broker.request(
+        message=task_id, queue=Queue.ONE_TASK
+    )
     json_string: str = res.body.decode("utf-8")
     return TaskState(**json.loads(json_string))
 

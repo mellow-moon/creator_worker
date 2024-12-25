@@ -12,9 +12,10 @@ services:
     restart: unless-stopped
     networks:
       - app_network
+
   postgres:
     image: postgres:latest
-    container_name: postgres_container
+    container_name: postgres
     environment:
       POSTGRES_USER: postgres_user
       POSTGRES_PASSWORD: postgres_password
@@ -24,6 +25,7 @@ services:
     restart: always
     networks:
       - app_network
+
   creator:
     build:
       context: .
@@ -34,9 +36,10 @@ services:
       - rabbit-server
     volumes:
       - ./creator:/creator_app
-    command: ["sh", "-c", "sleep 5; python main.py"]
+    command: ["sh", "-c", "sleep 15; python main.py"]
     networks:
       - app_network
+
   worker:
     build:
       context: .
@@ -46,7 +49,63 @@ services:
       - postgres
     volumes:
       - ./worker:/worker_app
-    command: ["sh", "-c", "sleep 5; faststream run main:app"]
+    command: ["sh", "-c", "sleep 15; faststream run main:app"]
+    networks:
+      - app_network
+
+  elasticsearch:
+    container_name: elasticsearch
+    image: elasticsearch:8.8.1
+    ports:
+      - "9200:9200"
+    environment:
+      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
+      - xpack.security.enabled=false
+      - discovery.type=single-node
+      - "ES_JAVA_OPTS=-Xmx1g -Xms1g"
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "curl -f localhost:9200"
+        ]
+      interval: 5s
+      timeout: 10s
+      retries: 120
+    depends_on:
+      - creator
+      - worker
+    networks:
+      - app_network
+
+  kibana:
+    container_name: kibana
+    image: kibana:8.8.1
+    ports:
+      - "5601:5601"
+    environment:
+      - ELASTICSEARCH_HOSTS=${ELASTIC_HOSTS}
+      - ELASTICSEARCH_USERNAME=${KIBANA_USERNAME}
+      - xpack.security.enabled=false
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    networks:
+      - app_network
+
+  filebeat:
+    container_name: filebeat
+    image: elastic/filebeat:8.8.1
+    user: root
+    environment:
+      - ELASTIC_HOSTS=${ELASTIC_HOSTS}
+    volumes:
+      - "./filebeat.yml:/usr/share/filebeat/filebeat.yml:ro"
+      - "/var/lib/docker/containers:/var/lib/docker/containers:ro"
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
     networks:
       - app_network
 
